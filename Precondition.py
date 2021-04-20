@@ -1,34 +1,66 @@
 import re
+import string
+import csv
 
 
-def clear_text_dataset(dataset):
-    ds = custom_standardization(dataset)
-    vocabulary = clean_words(ds)
-    # Проверка очистки данных
-    reg = re.compile('[^A-Za-zА-Я0-9!"№;%:-?*()\']')
-    checkText = [word for word in vocabulary if reg.sub('', word)]
-    if not checkText:
-        print('Успешно! Текст очищен для обучения')
-    return vocabulary
+def dataset_preprocessing(dataset):
+    spec_chars = string.punctuation + '\’\xa0«»\t-—…'
+    french_letters_diacritics = 'ÉÂâÊêÎîÔôÛûÀàÈèÙùËëÏïÜüŸÿÇç̀'
+    dataset = dataset.lower()
+    dataset = dataset.replace('\n', ' ')
+    dataset = dataset.replace('о́', 'о')
+    dataset = dataset.replace('é', 'е')
+    dataset = remove_chars_from_text(dataset, spec_chars)
+    dataset = remove_chars_from_text(dataset, string.digits)
+    dataset = remove_chars_from_text(dataset, string.ascii_lowercase)
+    dataset = remove_chars_from_text(dataset, french_letters_diacritics)
+    dataset = re.sub(r'\s+', ' ', dataset)
+    dataset = ' '.join(word for word in dataset.split() if len(word) > 3)
+    return dataset
 
 
-# We create a custom standardization function to lowercase the text and
-# remove punctuation.
-def custom_standardization(input_data):
-    kill_punctuation = str.maketrans('', '', r"-—()\"#/@;:<>{}=~|.?!,[]«»")
-    output_text = input_data.translate(kill_punctuation).split()
-    return output_text
+def remove_chars_from_text(text, chars):
+    return "".join([ch for ch in text if ch not in chars])
 
 
-def clean_words(words):
-    reg = re.compile('[^а-я]')
-    # Drop numbers
-    words = [word for word in words if not word.isdigit()]
-    # Drop one char word
-    words = [word for word in words if len(word) > 1]
-    words = [word for word in words if reg.sub('', word)]
-    # Drop stopwords
-    words = [word for word in words if word[0].isalpha()]
-    words = [word.lower() for word in words]
-    words = set(words)
-    return words
+def save_dataset_to_csv(vectors, key):
+    try:
+        with open('information system/dataset/dataset.csv', mode='w') as csv_file:
+            fieldnames = ['sentence', 'key']
+            writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+            writer.writeheader()
+            for vector in vectors:
+                writer.writerow({fieldnames[0]: vector, fieldnames[1]: key})
+        print('CSV file (dataset) is saved')
+    except Exception:
+        print('Dataset doesn\'t save as csv file')
+
+
+def split_text_on_vectors(text, size_vector):
+    array_words = text.split()
+    vectors = []
+    vector = []
+    step = 0
+    index = 0
+    for element in array_words:
+        step = step + 1
+        index = index + 1
+        vector.append(element)
+        if step == size_vector or index == len(array_words):
+            if (index - (size_vector + 1)) > 0:
+                border_el_left = array_words[index - (len(vector) + 1)]
+                vector.insert(0, border_el_left)
+            if index < len(array_words):
+                border_el_right = array_words[index]
+                vector.insert(size_vector + 1, border_el_right)
+            vectors.append(" ".join(vector))
+            vector = []
+            step = 0
+    return vectors
+
+
+# doc_result = docx2python('information system/dataset/Tolstoy_Lev_Nikolayevich/war_and_peace_tom_1.docx').text
+# text = dataset_preprocessing(doc_result)
+# vectors = split_text_on_vectors(text, 2)
+# print(vectors)
+# save_dataset_to_csv(vectors, 1)
