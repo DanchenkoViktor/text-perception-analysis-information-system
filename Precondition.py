@@ -4,7 +4,7 @@ import csv
 
 
 def dataset_preprocessing(dataset):
-    spec_chars = string.punctuation + '\’\xa0«»\t-—…'
+    spec_chars = string.punctuation + '\’\xa0«»\t-—…‘„“–'
     french_letters_diacritics = 'ÉÂâÊêÎîÔôÛûÀàÈèÙùËëÏïÜüŸÿÇç̀'
     dataset = dataset.lower()
     dataset = dataset.replace('\n', ' ')
@@ -25,13 +25,12 @@ def remove_chars_from_text(text, chars):
 
 def save_dataset_to_csv(vectors, key):
     try:
-        with open('information system/dataset/dataset.csv', mode='w') as csv_file:
+        with open('information system/dataset/dataset.csv', mode='a') as csv_file:
             fieldnames = ['sentence', 'key']
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
             writer.writeheader()
             for vector in vectors:
                 writer.writerow({fieldnames[0]: vector, fieldnames[1]: key})
-        print('CSV file (dataset) is saved')
     except Exception:
         print('Dataset doesn\'t save as csv file')
 
@@ -57,10 +56,3 @@ def split_text_on_vectors(text, size_vector):
             vector = []
             step = 0
     return vectors
-
-
-# doc_result = docx2python('information system/dataset/Tolstoy_Lev_Nikolayevich/war_and_peace_tom_1.docx').text
-# text = dataset_preprocessing(doc_result)
-# vectors = split_text_on_vectors(text, 2)
-# print(vectors)
-# save_dataset_to_csv(vectors, 1)
