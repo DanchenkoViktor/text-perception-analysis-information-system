@@ -1,14 +1,16 @@
+import csv
 import enum
 import os
 from os.path import join
-from typing import Dict
 
 from docx2python import docx2python
 from os import walk
 
+import Precondition
 from Precondition import dataset_preprocessing, save_dataset_to_csv, split_text_on_vectors
 
-PATH_DATASET = 'information system/dataset/'
+PATH_DATASET = 'dataset/'
+NAME_DATASET_CSV_FILE = 'dataset.csv'
 BATCH_SIZE = 1024
 SEED = 123
 
@@ -84,9 +86,8 @@ def reformat_name(author):
 
 
 def csv_dataset():
-    if os.path.exists('information system/dataset/dataset.csv'):
-        os.remove("information system/dataset/dataset.csv")
-        print(f'\nOld dataset is removed\n')
+    remove_dataset()
+    create_dataset_file(Precondition.PATH_DATASET_CSV)
     result = f"\nDataset is saved as CSV file"
     dict = get_all_dataset()
     for author in Author:
@@ -95,10 +96,27 @@ def csv_dataset():
             save_dataset_to_csv(vectors, author.value)
         except Exception:
             return f"\nFail saving dataset on csv"
-    return result
+    return print(result)
+
+
+def create_dataset_file(path):
+    with open(path, mode='w') as csv_file:
+        fieldnames = ['textId', 'sentence', 'key']
+        writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+        writer.writeheader()
+    return 0
+
+
+def remove_dataset():
+    if os.path.exists('dataset/dataset.csv'):
+        os.remove("dataset/dataset.csv")
+        return print(f'\nOld dataset is removed\n')
+    else:
+        return print('Dataset is not exists')
+
 
 class Author(enum.Enum):
-    Orwell_George = "0"
-    Tolstoy_Lev_Nikolayevich = "1"
-    Zamyatin_Evgeny_Ivanovich = "2"
-    Pushkin_Alexander_Sergeevich = "3"
+    Orwell_George = 0
+    Tolstoy_Lev_Nikolayevich = 1
+    Zamyatin_Evgeny_Ivanovich = 2
+    Pushkin_Alexander_Sergeevich = 3
