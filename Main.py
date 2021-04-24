@@ -4,7 +4,7 @@ from keras import layers
 from tensorflow.python.keras.callbacks import ModelCheckpoint
 from tensorflow.python.keras.models import Sequential
 
-from FileUtils import csv_dataset, Author, remove_dataset
+from FileUtils import Author, create_csv_dataset
 from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
 from sklearn.model_selection import train_test_split
@@ -19,10 +19,10 @@ import keras
 import numpy as np
 import pandas as pd
 
-print('Done')
+print('Import is done')
 
 # Create dataset as csv file
-# csv_dataset()
+create_csv_dataset()
 
 train = pd.read_csv('dataset/dataset.csv', sep=',')
 
@@ -75,7 +75,7 @@ model1.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['a
 # Implementing model checkpoins to save the best metric and do not lose it on training.
 checkpoint1 = ModelCheckpoint("best_model1.hdf5", monitor='val_accuracy', verbose=1, save_best_only=True, mode='auto',
                               save_freq='epoch', save_weights_only=False)
-history = model1.fit(X_train, y_train, epochs=5, validation_data=(X_test, y_test), callbacks=[checkpoint1])
+history = model1.fit(X_train, y_train, epochs=70, validation_data=(X_test, y_test), callbacks=[checkpoint1])
 
 model2 = Sequential()
 model2.add(layers.Embedding(max_words, 40, input_length=max_len))
@@ -85,7 +85,7 @@ model2.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['a
 # Implementing model checkpoins to save the best metric and do not lose it on training.
 checkpoint2 = ModelCheckpoint("best_model2.hdf5", monitor='val_accuracy', verbose=1, save_best_only=True, mode='auto',
                               save_freq='epoch', save_weights_only=False)
-history = model2.fit(X_train, y_train, epochs=5, validation_data=(X_test, y_test), callbacks=[checkpoint2])
+history = model2.fit(X_train, y_train, epochs=70, validation_data=(X_test, y_test), callbacks=[checkpoint2])
 
 from keras import regularizers
 
@@ -101,7 +101,7 @@ model3.add(layers.Dense(4, activation='softmax'))
 model3.compile(optimizer='rmsprop', loss='categorical_crossentropy', metrics=['acc'])
 checkpoint3 = ModelCheckpoint("best_model3.hdf5", monitor='val_accuracy', verbose=1, save_best_only=True, mode='auto',
                               save_freq='epoch', save_weights_only=False)
-history = model3.fit(X_train, y_train, epochs=5, validation_data=(X_test, y_test), callbacks=[checkpoint3])
+history = model3.fit(X_train, y_train, epochs=70, validation_data=(X_test, y_test), callbacks=[checkpoint3])
 
 best_model = keras.models.load_model("best_model2.hdf5")
 
@@ -129,9 +129,10 @@ plt.figure(figsize=(15, 15))
 sns.heatmap(conf_matrix, annot=True, annot_kws={"size": 15})
 
 # TEST
-sequence = tokenizer.texts_to_sequences(['this experience has been the worst , want my money back'])
+sequence = tokenizer.texts_to_sequences([
+    f'Мерин взмахнул хвостом, как будто говоря: "Так, ничего, Нестер". Нестер положил на него потник и седло, причем мерин приложил уши, выражая, должно быть, свое неудовольствие, но его только выбранили за это дрянью и стали стягивать подпруги. При этом мерин надулся, но ему всунули палец в рот и ударили коленом в живот, так что он должен был выпустить дух. Несмотря на то, когда зубом подтягивали трок, он еще раз приложил уши и даже оглянулся. Хотя он знал, что это не поможет, он все-таки считал нужным выразить, что ему это неприятно и всегда будет показывать это. Когда он был оседлан, он отставил оплывшую правую ногу и стал жевать удила, тоже по каким-то особенным соображениям, потому что пора ему было знать, что в удилах не может быть никакого вкуса.'])
 test = pad_sequences(sequence, maxlen=max_len)
-sentiment[np.around(best_model.predict(test), decimals=0).argmax(axis=1)[0]]
+print(sentiment[np.around(best_model.predict(test), decimals=0).argmax(axis=1)[0]])
 
 # Saving weights and tokenizer so we can reduce training time on SageMaker
 

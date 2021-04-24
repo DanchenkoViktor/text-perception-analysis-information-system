@@ -3,7 +3,7 @@ import enum
 import os
 from os.path import join
 
-from docx2python import docx2python
+import textract
 from os import walk
 
 import Precondition
@@ -38,38 +38,11 @@ def get_all_dataset():
         for filename in writings:
             path = join(path_to_works_of_the_author, filename)
             # extract docx content
-            doc_result = docx2python(path).text
+            doc_result = textract.process(path)
+            doc_result = doc_result.decode("utf-8")
             text = dataset_preprocessing(doc_result)
-            d.update({author: global_vacab.join(text)})
-    return d
-
-
-def get_df_from_dataset():
-    print("DATASET")
-    global authors, writings
-    try:
-        _, authors, _ = next(walk(PATH_DATASET))
-    except Warning:
-        print("Dataset is empty")
-    d = dict()
-    d.fromkeys(authors)
-
-    for author in authors:
-        path_to_works_of_the_author = join(PATH_DATASET, author)
-        try:
-            _, _, writings = next(walk(path_to_works_of_the_author))
-        except Warning:
-            print(author, "'s dataset is empty")
-        print("\n")
-        print(reformat_names(reformat_name(author)), "writing: ", sep=" ")
-        [print(reformat_names(writing), sep='\n') for writing in writings]
-        global_vacab = set()
-        for filename in writings:
-            path = join(path_to_works_of_the_author, filename)
-            # extract docx content
-            doc_result = docx2python(path).text
-            text = dataset_preprocessing(doc_result)
-            d.update({author: global_vacab.union(text)})
+            global_vacab = global_vacab + text
+            d.update({author: global_vacab})
     return d
 
 
@@ -85,14 +58,14 @@ def reformat_name(author):
     return "{0}'s {1}".format(author_spit[0], author_spit[1])
 
 
-def csv_dataset():
+def create_csv_dataset():
     remove_dataset()
     create_dataset_file(Precondition.PATH_DATASET_CSV)
     result = f"\nDataset is saved as CSV file"
-    dict = get_all_dataset()
+    dictionary_author = get_all_dataset()
     for author in Author:
         try:
-            vectors = split_text_on_vectors(dict.get(author.name), 2)
+            vectors = split_text_on_vectors(dictionary_author.get(author.name), 2)
             save_dataset_to_csv(vectors, author.value)
         except Exception:
             return f"\nFail saving dataset on csv"

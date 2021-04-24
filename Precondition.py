@@ -3,9 +3,6 @@ import string
 import csv
 import uuid
 
-import gensim
-from nltk.tokenize.treebank import TreebankWordDetokenizer
-
 PATH_DATASET_CSV = 'dataset/dataset.csv'
 
 
@@ -29,14 +26,9 @@ def remove_chars_from_text(text, chars):
     return "".join([ch for ch in text if ch not in chars])
 
 
-def sent_to_words(sentences):
-    for sentence in sentences:
-        yield (gensim.utils.simple_preprocess(str(sentence), deacc=True))
-
-
 def save_dataset_to_csv(vectors, key):
     try:
-        with open(PATH_DATASET_CSV, mode='a') as csv_file:
+        with open(PATH_DATASET_CSV, mode='a', encoding='utf-8') as csv_file:
             fieldnames = ['textId', 'sentence', 'key']
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
             for vector in vectors:
@@ -62,16 +54,7 @@ def split_text_on_vectors(text, size_vector):
             if index < len(array_words):
                 border_el_right = array_words[index]
                 vector.insert(size_vector + 1, border_el_right)
-            vectors.append(" ".join(vector))
+            vectors.append(u" ".join(vector))
             vector = []
             step = 0
-    vectors = list(sent_to_words(vectors))
-    data = []
-    for i in range(len(vectors)):
-        data.append(detokenize(vectors[i]))
-    print(data[:5])
-    return data
-
-
-def detokenize(text):
-    return TreebankWordDetokenizer().detokenize(text)
+    return vectors
